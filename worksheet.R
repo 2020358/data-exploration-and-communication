@@ -43,7 +43,8 @@ boxplot(data$Denominator , main = "Boxplot of Denominator", ylab = "Denominator"
 # Boxplot for a population variable 
 boxplot(data$Population , main = "Boxplot of Population", ylab = "Population")
 
-# b) statistical parameters. 
+##  statistical parameters. 
+
 # denominator 
 denominator_statistics <- summary(data$Denominator)
 denominator_sd <- sd(data$Denominator)
@@ -173,7 +174,7 @@ q1_sd <- quantile(second_dose, 0.25)
 q3_sd <- quantile(second_dose, 0.75)
 robust_scaled_second_dose <- (second_dose - median(second_dose)) / IQR(second_dose)
 
-# EDA
+## EDA
 
 # histogram of polulation by frequency (fig 3) 
 ggplot(data, aes(x = Population)) +
@@ -206,17 +207,13 @@ ggplot(max_population_by_country, aes(x = ReportingCountry, y = Population, fill
   theme_minimal()
 
 
-
-
-
-
-# correlation between numerical columns (fig 6)
+# correlation between numerical columns 
 numerical_columns <- data[, c("FirstDose", "SecondDose","NumberDosesReceived","DoseAdditional1","DoseAdditional2","UnknownDose","Denominator", "Population")]
 
-# Calculate the correlation matrix
-cor_matrix <- cor(numerical_columns)
+#  correlation matrix
+correlational_matrix <- cor(numerical_columns)
 
-# Create a heatmap
+#  heatmap (fig 6)
 heatmap(cor_matrix, 
         col = colorRampPalette(c("blue", "white", "red"))(100),
         main = "Correlation Heatmap")
@@ -224,7 +221,7 @@ heatmap(cor_matrix,
 
 
 
-
+# total doses per target group
 
 # add total doses as a column in dataset, it will sum up all the doses for each observation 
 data$TotalDoses <- rowSums(data[,c("FirstDose","SecondDose","DoseAdditional1"
@@ -333,9 +330,5 @@ plot.PCA(data.pca1, axes = c(1,2), choix = "ind", habillage = "none",
          new.plot = TRUE,
          title = "Factor Map"
          )
-
-
-
-
 
 

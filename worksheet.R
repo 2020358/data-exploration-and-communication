@@ -102,14 +102,6 @@ print(ud_sd)
 
 
 
-
-first_dose <- data$Population
-
-# Create a histogram
-ggplot(data, aes(x = FirstDose)) +
-  geom_histogram(binwidth = 1e5, fill = "blue", color = "black", alpha = 0.7) +
-  labs(title = "Histogram of FirstDose", x = "FirstDose", y = "Frequency")
-
  
 # c min-max normalization, z-score and robust scalar 
 
@@ -197,7 +189,7 @@ different_vaccines_per_country <- data %>%
 
 
 # bar chart of different vaccine types used by reporting country (fig 4) 
-ggplot(total_vaccine_types, aes(x = ReportingCountry, y = TotalVaccineTypes, fill = ReportingCountry)) +
+ggplot(different_vaccines_per_country, aes(x = ReportingCountry, y = DifferentVaccinesNumber, fill = ReportingCountry)) +
   geom_bar(stat = "identity") +
   labs(title = "Total Number of Different Vaccine Types Used vs Reporting Country", x = "Reporting Country", y = "Different Vaccine Used") +
   theme_minimal()
@@ -213,14 +205,33 @@ ggplot(max_population_by_country, aes(x = ReportingCountry, y = Population, fill
   labs(title = "Population by Reporting Country", x = "Reporting Country", y = "Max Population") +
   theme_minimal()
 
-# bar chart of total number of vaccines per target group 
 
-# add total doses as a column in dataset, it will summ up all the doses for each observation 
+
+
+
+
+# correlation between numerical columns (fig 6)
+numerical_columns <- data[, c("FirstDose", "SecondDose","NumberDosesReceived","DoseAdditional1","DoseAdditional2","UnknownDose","Denominator", "Population")]
+
+# Calculate the correlation matrix
+cor_matrix <- cor(numerical_columns)
+
+# Create a heatmap
+heatmap(cor_matrix, 
+        col = colorRampPalette(c("blue", "white", "red"))(100),
+        main = "Correlation Heatmap")
+
+
+
+
+
+
+# add total doses as a column in dataset, it will sum up all the doses for each observation 
 data$TotalDoses <- rowSums(data[,c("FirstDose","SecondDose","DoseAdditional1"
                                    ,"DoseAdditional2","DoseAdditional3","DoseAdditional4",
                                    "DoseAdditional5","UnknownDose")])
 
-# calcuate total doses per group 
+# calculate total doses per group 
 total_doses_per_group <- data %>%
   group_by(TargetGroup) %>%
   summarize(TotalDoses = sum(TotalDoses))
@@ -237,31 +248,91 @@ total_doses_per_group <- total_doses_per_group %>%
 total_doses_per_group <- total_doses_per_group %>%
   filter(TargetGroup != 'Age<18')
 
-# display bar chart of total doses per age group  (fig 6)
+# display bar chart of total doses per age group  (fig 7)
 ggplot(total_doses_per_group, aes(x = TargetGroup, y = TotalDoses, fill = TargetGroup)) +
   geom_bar(stat = "identity") +
   labs(title = "Bar Chart of Total Doses per Target Group", x = "Target Group", y = "Total Doses") +
   theme_minimal()
 
-// to do 
-
-numerical_columns <- data[, c("FirstDose", "SecondDose","NumberDosesReceived","DoseAdditional1","DoseAdditional2","UnknownDose","Denominator", "Population")]
-
-# Calculate the correlation matrix
-cor_matrix <- cor(numerical_columns)
-
-# Create a heatmap
-heatmap(cor_matrix, 
-        col = colorRampPalette(c("blue", "white", "red"))(100),
-        main = "Correlation Heatmap")
 
 
+# fig 8 - Pie chart of distribution of vaccine type across dataset 
+
+vaccine_type_counts <- table(data$Vaccine)
+
+
+vaccine_df <- data.frame(Vaccine = names(vaccine_type_counts), Count = as.numeric(vaccine_type_counts))
+
+# Create a pie chart
+ggplot(vaccine_df, aes(x = "", y = Count, fill = Vaccine)) +
+  geom_bar(stat = "identity", width = 1, color = "white") +
+  coord_polar("y", start = 0) +
+  labs(title = "Distribution of Different Types of Vaccines", fill = "Vaccine") +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+
+
+### ONE-HOT ENCODING
+
+one_hot_encoding_vaccine <- as.data.frame(model.matrix(~ Vaccine - 1, data = data))
+data_one_hot <- cbind(data, one_hot_encoding_vaccine)
+head(data)
+
+
+### PCA 
 
 
 
 
+library(FactoMineR)
+
+# pca calculations 
+
+pca1 <- data[,c("NumberDosesReceived","FirstDose","SecondDose")]
+
+pca2 <- data[,c("NumberDosesReceived",
+               "FirstDose","SecondDose", 
+               "DoseAdditional1",
+               "DoseAdditional2",
+               "DoseAdditional3",
+               "DoseAdditional4",
+               "DoseAdditional5" )]
+
+## pca function from FactoMiner library 
+data.pca1 <- PCA(pca1, scale.unit = TRUE, ncp=5,graph = FALSE)
+data.pca2 <- PCA(pca2, scale.unit = TRUE, ncp=5,graph = FALSE)
+
+summary(data.pca1)
 
 
+#fig 9 
+barplot(data.pca1$eig[,2], names.arg = 1:nrow(data.pca$eig),
+        main = "Variance by Component",
+        xlab = "Principal Component",
+        ylab = "Percentage of Variance",
+        col = "lightblue"
+        )
+lines(x=1:nrow(data.pca$eig), data.pca$eig[,2],type = "b", pch=19, col = "green")
+
+
+## fig 10 
+plot.PCA(data.pca1, axes = c(1,2), choix = "var", new.plot = TRUE, col.var = "red",
+         col.quanti.sup = "blue", label = c("var","qanti.sup"), lim.cos2.var = 0
+         )
+
+## fig 11 
+plot.PCA(data.pca2, axes = c(1,2,3,4), choix = "var", new.plot = TRUE, col.var = "red",
+         col.quanti.sup = "blue", label = c("var","qanti.sup"), lim.cos2.var = 0
+)
+
+
+plot.PCA(data.pca1, axes = c(1,2), choix = "ind", habillage = "none",
+         col.ind = "red", col.ind.sup = "blue", col.quali = "magenta", label = c("ind","ind.sup"
+                                                                                 ,"quali"),
+         new.plot = TRUE,
+         title = "Factor Map"
+         )
 
 
 

@@ -1,4 +1,6 @@
+# please enter your path to folder containing dataset
 setwd("C:/Users/rober/OneDrive/Desktop/CAs/data exploration and communication")
+
 library(dplyr)
 library(ggplot2)
 
@@ -7,7 +9,7 @@ data <- read.csv("data.csv", na.strings = "NA")
 head(data)
 
 
-# a) cleaning 
+##  cleaning of data set  
 
 # remove first dose refused column, this column contains only NA values 
 data <- data[, -which(names(data) == 'FirstDoseRefused')]
@@ -104,7 +106,7 @@ print(ud_sd)
 
 
  
-# c min-max normalization, z-score and robust scalar 
+#  min-max normalization, z-score and robust scalar 
 
 # denominator 
 denominator <- data$Denominator
@@ -117,7 +119,7 @@ z_score_deno <- (denominator - mean(denominator))
 q1_deno <- quantile(denominator, 0.25)
 #third quantile 
 q3_deno <- quantile(denominator, 0.75)
-robust_deno <- (denominator - median(denominator)) / IQR(denominator)
+robust_deno <- (denominator - median(denominator)) / (q3_deno - q1_deno)
 
 # number of doses received 
 dose_rec <- data$NumberDosesReceived
@@ -132,7 +134,7 @@ q1_dose_res = quantile(dose_rec, 0.25)
 #third quantile 
 q3_dose_res = quantile(dose_res, 075)
 robust_dose_res <- (dose_rec - median(dose_rec)) /
-  IQR(dose_rec)
+  (q3_dose_res - q1_dose_res)
 
 #number of doses exported 
 dose_ex <- data$NumberDosesExported
@@ -147,7 +149,7 @@ q1_dose_ex <- quantile(dose_ex, 0.25)
 #third quantile
 q3_dose_ex <- quantile(dose_ex, 0.75)
 robust_dose_ex <- (dose_ex - median(dose_ex))/
-  IQR(dose_ex)
+  (q3_dose_ex - q1_dose_ex)
 
 
 #first dose 
@@ -160,7 +162,8 @@ z_score_fd <- (first_dose - mean(first_dose)) / sd(first_dose)
 q1_fd <- quantile(first_dose, 0.25)
 #third quantile 
 q3_fd <- quantile(first_dose, 0.75)
-robust_fd <- (first_dose - median(first_dose)) / IQR(first_dose)
+robust_fd <- (first_dose - median(first_dose)) /
+  (q3_fd - q1_fd)
 
 # second dose
 second_dose <- data$SecondDose
@@ -172,7 +175,8 @@ z_score_second_dose <- (second_dose - mean(second_dose)) / sd(second_dose)
 q1_sd <- quantile(second_dose, 0.25)
 #third quantile 
 q3_sd <- quantile(second_dose, 0.75)
-robust_scaled_second_dose <- (second_dose - median(second_dose)) / IQR(second_dose)
+robust_scaled_second_dose <- (second_dose - median(second_dose)) / 
+  (q3_sd - q1_sd)
 
 ## EDA
 
@@ -278,9 +282,6 @@ head(data)
 
 
 ### PCA 
-
-
-
 
 library(FactoMineR)
 
